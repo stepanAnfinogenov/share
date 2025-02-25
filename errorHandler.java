@@ -1,5 +1,18 @@
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    
+    // ✅ Handle 404 Not Found
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserNotFoundException ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+            String.valueOf(HttpStatus.NOT_FOUND.value()), // "404"
+            ex.getMessage(),
+            request.getDescription(false),
+            LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+    }
 
     // ✅ Handle 400 Bad Request - Validation Errors
     @ExceptionHandler(MethodArgumentNotValidException.class)
