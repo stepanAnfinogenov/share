@@ -67,3 +67,62 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.path").value("/api/users/99"));
     }
 }
+
+
+
+
+
+
+
+
+
+package com.epam.atm_service.controller;
+
+import com.epam.atm_service.exception.InvalidTokenException;
+import com.epam.atm_service.service.LoginService;
+import com.epam.atm_service.service.TransactionHistoryService;
+import com.epam.atm_service.utils.TestUtils;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
+import java.net.URISyntaxException;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class AccountControllerUnitTest {
+
+  private final HttpServletRequest request = mock(HttpServletRequest.class);
+  private final HttpServletResponse response = mock(HttpServletResponse.class);
+  private final LoginService loginService = mock(LoginService.class);
+  private final TransactionHistoryService transactionHistoryService = mock(TransactionHistoryService.class);
+
+  private final static String TOKEN = "1234567890123456";
+
+  @Test
+  void postNewCard() throws IOException, URISyntaxException, InvalidTokenException {
+    String input = TestUtils.readFileFromResources("account_Post_input.json");
+    when(request.getHeader(anyString())).thenReturn(TOKEN);
+    when(loginService.isTokenExist(anyLong())).thenReturn(true);
+
+    StringReader stringReader = new StringReader(input);
+    BufferedReader reader = new BufferedReader(stringReader);
+    when(request.getReader()).thenReturn(reader);
+
+    StringWriter stringWriter = new StringWriter();
+    PrintWriter writer = new PrintWriter(stringWriter);
+    when(response.getWriter()).thenReturn(writer);
+
+    new AccountController(loginService, transactionHistoryService).doPost(request, response);
+    writer.flush();
+    assertEquals(stringWriter.toString().trim(), input.trim());
+  }
+}
