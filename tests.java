@@ -126,3 +126,73 @@ class AccountControllerUnitTest {
     assertEquals(stringWriter.toString().trim(), input.trim());
   }
 }
+
+
+package com.epam.atm_service.controller;
+
+import com.epam.atm_service.exception.InvalidTokenException;
+import com.epam.atm_service.service.LoginService;
+import com.epam.atm_service.utils.TestUtils;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
+import java.net.URISyntaxException;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class UserControllerUnitTest {
+
+  private final HttpServletRequest request = mock(HttpServletRequest.class);
+  private final HttpServletResponse response = mock(HttpServletResponse.class);
+  private final LoginService loginService = mock(LoginService.class);
+
+  @Test
+  void testLogin() {
+
+  }
+
+  @Test
+  void testLogout() {
+
+  }
+
+  @Test()
+  void getUserProfile() throws IOException, URISyntaxException, InvalidTokenException {
+    String expected = TestUtils.readFileFromResources("user_post_user_input.json");
+    when(request.getRequestURI()).thenReturn("/user/profile");
+    when(request.getHeader(anyString())).thenReturn("1234");
+    when(loginService.isTokenExist(anyLong())).thenReturn(true);
+    StringWriter stringWriter = new StringWriter();
+    PrintWriter writer = new PrintWriter(stringWriter);
+    when(response.getWriter()).thenReturn(writer);
+
+    new UserController(loginService).doGet(request, response);
+    writer.flush();
+    assertEquals(stringWriter.toString().trim(), expected.trim());
+  }
+
+  @Test
+  void testDoPostNewUser() throws IOException, URISyntaxException, InvalidTokenException {
+    when(request.getHeader(anyString())).thenReturn("1234");
+    when(loginService.isTokenExist(anyLong())).thenReturn(true);
+    String expected = TestUtils.readFileFromResources("user_post_user_input.json");
+
+    StringReader stringReader = new StringReader(expected);
+    BufferedReader reader = new BufferedReader(stringReader);
+    when(request.getReader()).thenReturn(reader);
+
+    StringWriter stringWriter = new StringWriter();
+    PrintWriter writer = new PrintWriter(stringWriter);
+    when(response.getWriter()).thenReturn(writer);
+
+    new UserController(loginService).doPost(request, response);
+    writer.flush();
+    assertEquals(stringWriter.toString().trim(), expected.trim());
+  }
+}
