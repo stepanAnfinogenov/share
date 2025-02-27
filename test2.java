@@ -42,43 +42,52 @@ class UserControllerTest {
                 new UserDto(2L, "Bob", "bob@example.com")
         );
 
-        when(userService.getActiveUsers()).thenReturn(activeUsers);
+        when(userService.getActiveUsers("Y")).thenReturn(activeUsers);
 
-        mockMvc.perform(get("/api/users/active"))
+        mockMvc.perform(get("/api/users/active").param("active", "Y"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.size()").value(2))
                 .andExpect(jsonPath("$[0].id").value(1))
                 .andExpect(jsonPath("$[0].name").value("Alice"))
                 .andExpect(jsonPath("$[1].name").value("Bob"));
 
-        verify(userService, times(1)).getActiveUsers();
+        verify(userService, times(1)).getActiveUsers("Y");
     }
 
     // ✅ 2. Test: Should return 404 when no active users exist
     @Test
     void getActiveUsers_NoUsersFound_ReturnsNotFound() throws Exception {
-        when(userService.getActiveUsers()).thenThrow(new UserNotFoundException("No active users found"));
+        when(userService.getActiveUsers("Y")).thenThrow(new UserNotFoundException("No active users found"));
 
-        mockMvc.perform(get("/api/users/active"))
+        mockMvc.perform(get("/api/users/active").param("active", "Y"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorCode").value("404"))
                 .andExpect(jsonPath("$.message").value("No active users found"))
                 .andExpect(jsonPath("$.path").value("/api/users/active"));
 
-        verify(userService, times(1)).getActiveUsers();
+        verify(userService, times(1)).getActiveUsers("Y");
     }
 
     // ✅ 3. Test: Should return 500 Internal Server Error when NPE occurs
     @Test
     void getActiveUsers_NullPointerException_ReturnsInternalServerError() throws Exception {
-        when(userService.getActiveUsers()).thenThrow(new NullPointerException());
+        when(userService.getActiveUsers("Y")).thenThrow(new NullPointerException());
 
-        mockMvc.perform(get("/api/users/active"))
+        mockMvc.perform(get("/api/users/active").param("active", "Y"))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.errorCode").value("500"))
                 .andExpect(jsonPath("$.message").contains("Unexpected null value encountered"))
                 .andExpect(jsonPath("$.path").value("/api/users/active"));
 
-        verify(userService, times(1)).getActiveUsers();
+        verify(userService, times(1)).getActiveUsers("Y");
+    }
+
+    // ✅ 4. Test: Should return 400 when 'active' parameter is missing
+    @Test
+    void getActiveUsers_MissingActiveParam_ReturnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/users/active"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(userService); // Ensure service method is not called
     }
 }
